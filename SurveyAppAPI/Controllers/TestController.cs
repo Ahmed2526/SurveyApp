@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyAppAPI.Controllers
 {
@@ -8,5 +7,11 @@ namespace SurveyAppAPI.Controllers
     public class TestController : ControllerBase
     {
 
+        [HttpGet]
+        public IActionResult atat()
+        {
+
+            return Ok();
+        }
     }
 }

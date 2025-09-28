@@ -1,3 +1,4 @@
+using SurveyAppAPI.Dependencies;
 
 namespace SurveyAppAPI
 {
@@ -9,10 +10,17 @@ namespace SurveyAppAPI
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.RegisterBuiltInService();
+
+            //Adding DBContext & Identity
+            builder.Services.RegisterContext(builder.Configuration);
+
+            //Register Mapster & Mapster configuration
+            builder.Services.RegisterMapster();
+
+            //Register Custom Services
+            builder.Services.RegisterCustomServices();
+
 
             var app = builder.Build();
 
