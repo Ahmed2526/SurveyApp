@@ -1,11 +1,13 @@
 ﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyAppAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PollsController : ControllerBase
     {
         private readonly IPollsService _pollsService;

@@ -19,7 +19,11 @@ namespace SurveyAppAPI
             builder.Services.RegisterMapster();
 
             //Register Custom Services
-            builder.Services.RegisterCustomServices();
+            builder.Services.RegisterCustomServices(builder.Configuration);
+
+            // Add Authentication
+            builder.Services.RegisterJwtBearer(builder.Configuration);
+            builder.Services.AddAuthorization();
 
 
             var app = builder.Build();
@@ -33,6 +37,7 @@ namespace SurveyAppAPI
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
