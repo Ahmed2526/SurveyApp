@@ -19,6 +19,7 @@ namespace DataAccessLayer.Data
         }
 
         public DbSet<Poll> Polls { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     }
 }

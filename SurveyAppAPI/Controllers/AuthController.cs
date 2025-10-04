@@ -1,7 +1,7 @@
 ﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
+using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -30,12 +30,36 @@ namespace SurveyAppAPI.Controllers
 
             return Ok(result);
         }
-        
+
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register(RegisterDto registerCredentials)
         {
             var result = await _authService.RegisterAsync(registerCredentials);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("refresh-token")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequest tokenRequest)
+        {
+            var result = await _authService.RefreshToken(tokenRequest.refreshToken, tokenRequest.oldToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("revoke-token")]
+        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken)
+        {
+            var result = await _authService.RevokeToken(refreshToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

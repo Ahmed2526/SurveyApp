@@ -40,7 +40,7 @@ namespace BussinessLogicLater.Service
             var pollDto = _mapper.Map<PollDto>(poll);
             return Result<PollDto>.Success(StatusCodes.Status200OK, pollDto);
         }
-        
+
         public async Task<Result<PollDto>> CreateAsync(PollCreateDto dto)
         {
             var poll = _mapper.Map<Poll>(dto);

@@ -1,8 +1,8 @@
 ﻿namespace DataAccessLayer.DTOs
 {
-    public class JwtAuthResult
+    public class JwtTokenResult
     {
         public string Token { get; set; }
-        public DateTime ExpiryInDays { get; set; }
+        public DateTime ExpiryAt { get; set; }
     }
 }

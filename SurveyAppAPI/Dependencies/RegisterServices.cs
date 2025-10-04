@@ -67,7 +67,7 @@ namespace SurveyAppAPI.Dependencies
                     ValidateIssuerSigningKey = true,
 
                     ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"] ,
+                    ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(secretKey)
                 };
 
@@ -96,6 +96,7 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IPollsService, PollsService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         }
 
 
