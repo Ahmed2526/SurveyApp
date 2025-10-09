@@ -18,18 +18,18 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
-            var data = await _pollsService.GetAllAsync();
+            var data = await _pollsService.GetAllAsync(cancellationToken);
 
             return Ok(data);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            var data = await _pollsService.GetByIdAsync(id);
+            var data = await _pollsService.GetByIdAsync(id, cancellationToken);
 
             if (data.IsSuccess)
                 return Ok(data);
@@ -38,9 +38,9 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(PollCreateDto dto)
+        public async Task<IActionResult> Create(PollCreateDto dto, CancellationToken cancellationToken)
         {
-            var data = await _pollsService.CreateAsync(dto);
+            var data = await _pollsService.CreateAsync(dto, cancellationToken);
 
             if (data.IsSuccess)
                 return CreatedAtAction("GetById", new { id = data.Data!.Id }, data);
@@ -49,9 +49,9 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromQuery] int id, PollCreateDto dto)
+        public async Task<IActionResult> Update([FromQuery] int id, PollCreateDto dto, CancellationToken cancellationToken)
         {
-            var data = await _pollsService.UpdateAsync(id, dto);
+            var data = await _pollsService.UpdateAsync(id, dto, cancellationToken);
 
             if (data.IsSuccess)
                 return Ok(data);
@@ -60,9 +60,9 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> Delete([FromQuery] int id)
+        public async Task<IActionResult> Delete([FromQuery] int id, CancellationToken cancellationToken)
         {
-            var data = await _pollsService.DeleteAsync(id);
+            var data = await _pollsService.DeleteAsync(id, cancellationToken);
 
             if (data.IsSuccess)
                 return Ok(data);

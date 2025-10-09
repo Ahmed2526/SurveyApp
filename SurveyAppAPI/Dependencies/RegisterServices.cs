@@ -94,9 +94,12 @@ namespace SurveyAppAPI.Dependencies
             Configuration.GetSection("JwtSettings"));
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IPollsService, PollsService>();
-            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IQuestionRepository, QuestionRepository>();
+
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPollsService, PollsService>();
+            services.AddScoped<IQuestionService, QuestionService>();
         }
 
 

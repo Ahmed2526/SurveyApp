@@ -15,19 +15,19 @@ namespace DataAccessLayer.Repository
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
         {
-            var data = await _dbSet.ToListAsync();
+            var data = await _dbSet.ToListAsync(cancellationToken);
             return data;
         }
-        public async Task<T> GetByIdAsync(int id)
+        public async Task<T> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var data = await _dbSet.FindAsync(id);
+            var data = await _dbSet.FindAsync(id, cancellationToken);
             return data;
         }
-        public async Task AddAsync(T entity)
+        public async Task AddAsync(T entity, CancellationToken cancellationToken)
         {
-            await _dbSet.AddAsync(entity);
+            await _dbSet.AddAsync(entity, cancellationToken);
         }
         public void Update(T entity)
         {
@@ -37,9 +37,9 @@ namespace DataAccessLayer.Repository
         {
             _dbSet.Remove(entity);
         }
-        public async Task<int> SaveChangesAsync()
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            int result = await _context.SaveChangesAsync();
+            int result = await _context.SaveChangesAsync(cancellationToken);
             return result;
         }
 

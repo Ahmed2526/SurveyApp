@@ -1,9 +1,7 @@
 ﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
-using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace SurveyAppAPI.Controllers
 {
@@ -21,9 +19,9 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> login(LoginDto loginCredentials)
+        public async Task<IActionResult> login(LoginDto loginCredentials, CancellationToken cancellationToken)
         {
-            var result = await _authService.LoginAsync(loginCredentials);
+            var result = await _authService.LoginAsync(loginCredentials, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -33,9 +31,9 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register(RegisterDto registerCredentials)
+        public async Task<IActionResult> Register(RegisterDto registerCredentials, CancellationToken cancellationToken)
         {
-            var result = await _authService.RegisterAsync(registerCredentials);
+            var result = await _authService.RegisterAsync(registerCredentials, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -45,9 +43,9 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("refresh-token")]
-        public async Task<IActionResult> RefreshToken(RefreshTokenRequest tokenRequest)
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequest tokenRequest, CancellationToken cancellationToken)
         {
-            var result = await _authService.RefreshToken(tokenRequest.refreshToken, tokenRequest.oldToken);
+            var result = await _authService.RefreshToken(tokenRequest.refreshToken, tokenRequest.oldToken, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -57,9 +55,9 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("revoke-token")]
-        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken, CancellationToken cancellationToken)
         {
-            var result = await _authService.RevokeToken(refreshToken);
+            var result = await _authService.RevokeToken(refreshToken, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

@@ -21,18 +21,18 @@ namespace BussinessLogicLater.Service
             _contextAccessor = contextAccessor;
         }
 
-        public async Task<Result<IEnumerable<PollDto>>> GetAllAsync()
+        public async Task<Result<IEnumerable<PollDto>>> GetAllAsync(CancellationToken cancellationToken)
         {
-            var polls = await _pollsRepository.GetAllAsync();
+            var polls = await _pollsRepository.GetAllAsync(cancellationToken);
             var pollsDto = _mapper.Map<IEnumerable<PollDto>>(polls);
 
             var result = Result<IEnumerable<PollDto>>.Success(StatusCodes.Status200OK, pollsDto);
             return result;
         }
 
-        public async Task<Result<PollDto>> GetByIdAsync(int id)
+        public async Task<Result<PollDto>> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var poll = await _pollsRepository.GetByIdAsync(id);
+            var poll = await _pollsRepository.GetByIdAsync(id, cancellationToken);
 
             if (poll is null)
                 return Result<PollDto>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
@@ -41,7 +41,7 @@ namespace BussinessLogicLater.Service
             return Result<PollDto>.Success(StatusCodes.Status200OK, pollDto);
         }
 
-        public async Task<Result<PollDto>> CreateAsync(PollCreateDto dto)
+        public async Task<Result<PollDto>> CreateAsync(PollCreateDto dto, CancellationToken cancellationToken)
         {
             var poll = _mapper.Map<Poll>(dto);
 
@@ -52,19 +52,18 @@ namespace BussinessLogicLater.Service
                 return Result<PollDto>.Fail(StatusCodes.Status401Unauthorized, new[] { "unauthorized user" });
 
             poll.CreatedById = userId;
-            poll.CreatedOn = DateTime.Now;
 
-            await _pollsRepository.AddAsync(poll);
-            await _pollsRepository.SaveChangesAsync();
+            await _pollsRepository.AddAsync(poll, cancellationToken);
+            await _pollsRepository.SaveChangesAsync(cancellationToken);
 
             var polldto = _mapper.Map<PollDto>(poll);
 
             return Result<PollDto>.Success(StatusCodes.Status201Created, polldto);
         }
 
-        public async Task<Result<bool>> UpdateAsync(int id, PollCreateDto dto)
+        public async Task<Result<bool>> UpdateAsync(int id, PollCreateDto dto, CancellationToken cancellationToken)
         {
-            var poll = await _pollsRepository.GetByIdAsync(id);
+            var poll = await _pollsRepository.GetByIdAsync(id, cancellationToken);
 
             if (poll is null)
                 return Result<bool>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
@@ -84,20 +83,20 @@ namespace BussinessLogicLater.Service
             poll.UpdatedOn = DateTime.Now;
 
             _pollsRepository.Update(poll);
-            await _pollsRepository.SaveChangesAsync();
+            await _pollsRepository.SaveChangesAsync(cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
 
-        public async Task<Result<bool>> DeleteAsync(int id)
+        public async Task<Result<bool>> DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var poll = await _pollsRepository.GetByIdAsync(id);
+            var poll = await _pollsRepository.GetByIdAsync(id, cancellationToken);
 
             if (poll is null)
                 return Result<bool>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
 
             _pollsRepository.Delete(poll);
-            await _pollsRepository.SaveChangesAsync();
+            await _pollsRepository.SaveChangesAsync(cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }

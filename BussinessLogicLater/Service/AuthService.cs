@@ -28,7 +28,7 @@ namespace BussinessLogicLater.Service
             _contextAccessor = contextAccessor;
         }
 
-        public async Task<Result<AuthResult>> RegisterAsync(RegisterDto registerCredentials)
+        public async Task<Result<AuthResult>> RegisterAsync(RegisterDto registerCredentials, CancellationToken cancellationToken)
         {
             var CheckExist = await _userManager.FindByEmailAsync(registerCredentials.Email);
 
@@ -57,8 +57,8 @@ namespace BussinessLogicLater.Service
             var jwtToken = GenerateJWTtoken(user);
             var refreshToken = GenerateRefreshToken(user.Id);
 
-            await _refreshTokenRepository.AddAsync(refreshToken);
-            await _refreshTokenRepository.SaveChangesAsync();
+            await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+            await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
 
             var authResult = new AuthResult()
             {
@@ -71,7 +71,7 @@ namespace BussinessLogicLater.Service
             return Result<AuthResult>.Success(StatusCodes.Status200OK, authResult);
         }
 
-        public async Task<Result<AuthResult>> LoginAsync(LoginDto loginCredentials)
+        public async Task<Result<AuthResult>> LoginAsync(LoginDto loginCredentials, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(loginCredentials.Email);
 
@@ -86,8 +86,8 @@ namespace BussinessLogicLater.Service
             var jwtToken = GenerateJWTtoken(user);
             var refreshToken = GenerateRefreshToken(user.Id);
 
-            await _refreshTokenRepository.AddAsync(refreshToken);
-            await _refreshTokenRepository.SaveChangesAsync();
+            await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+            await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
 
             var authResult = new AuthResult()
             {
@@ -101,9 +101,9 @@ namespace BussinessLogicLater.Service
 
         }
 
-        public async Task<Result<AuthResult>> RefreshToken(string refreshToken, string oldToken)
+        public async Task<Result<AuthResult>> RefreshToken(string refreshToken, string oldToken, CancellationToken cancellationToken)
         {
-            var token = await _refreshTokenRepository.GettokenAsync(refreshToken);
+            var token = await _refreshTokenRepository.GettokenAsync(refreshToken, cancellationToken);
 
             if (token is null || !token.IsActive)
                 return Result<AuthResult>.Fail(StatusCodes.Status400BadRequest, new[] { "Invalid token" });
@@ -122,8 +122,8 @@ namespace BussinessLogicLater.Service
             var newRefreshToken = GenerateRefreshToken(user.Id);
 
             _refreshTokenRepository.Update(token);
-            await _refreshTokenRepository.AddAsync(newRefreshToken);
-            await _refreshTokenRepository.SaveChangesAsync();
+            await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
+            await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
 
             var authResult = new AuthResult()
             {
@@ -136,17 +136,17 @@ namespace BussinessLogicLater.Service
             return Result<AuthResult>.Success(StatusCodes.Status200OK, authResult);
         }
 
-        public async Task<Result<bool>> RevokeToken(string refreshToken)
+        public async Task<Result<bool>> RevokeToken(string refreshToken, CancellationToken cancellationToken)
         {
-            var token = await _refreshTokenRepository.GettokenAsync(refreshToken);
+            var token = await _refreshTokenRepository.GettokenAsync(refreshToken, cancellationToken);
 
             if (token is null || !token.IsActive)
-                return Result<bool>.Fail(StatusCodes.Status400BadRequest, new[] {"Invalid Token"});
+                return Result<bool>.Fail(StatusCodes.Status400BadRequest, new[] { "Invalid Token" });
 
             token.Revoked = DateTime.UtcNow;
 
             _refreshTokenRepository.Update(token);
-            await _refreshTokenRepository.SaveChangesAsync();
+            await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }

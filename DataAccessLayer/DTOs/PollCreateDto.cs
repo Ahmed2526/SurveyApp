@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SurveyAppAPI.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataAccessLayer.DTOs
 {
@@ -13,6 +14,7 @@ namespace DataAccessLayer.DTOs
         public string Summary { get; set; }
 
         [Required]
+        [DateRange(nameof(EndsAt))]
         public DateOnly StartsAt { get; set; }
 
         [Required]

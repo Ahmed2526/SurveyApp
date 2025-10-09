@@ -1,4 +1,5 @@
 using SurveyAppAPI.Dependencies;
+using SurveyAppAPI.MiddleWares;
 
 namespace SurveyAppAPI
 {
@@ -37,9 +38,10 @@ namespace SurveyAppAPI
 
             app.UseHttpsRedirection();
 
+            app.UseMiddleware<GlobalExceptionMiddleware>();
+
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

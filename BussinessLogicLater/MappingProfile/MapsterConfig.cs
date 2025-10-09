@@ -13,6 +13,11 @@ namespace BussinessLogicLater.MappingProfile
 
             config.NewConfig<Poll, PollCreateDto>().TwoWays();
 
+            config.NewConfig<Question, QuestionResponse>().Map(e => e.Answers, e => e.Answers.Select(e => e.Content));
+
+            config.NewConfig<QuestionRequest, Question>()
+                .Map(dest => dest.Answers, src => src.Answers.Select(a => new Answer { Content = a }).ToList());
+
         }
     }
 }

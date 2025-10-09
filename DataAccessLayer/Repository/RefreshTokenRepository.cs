@@ -12,9 +12,9 @@ namespace DataAccessLayer.Repository
 
         }
 
-        public async Task<RefreshToken> GettokenAsync(string refreshtoken)
+        public async Task<RefreshToken> GettokenAsync(string refreshtoken, CancellationToken cancellationToken)
         {
-            var token = await _context.RefreshTokens.FirstOrDefaultAsync(e => e.Token == refreshtoken);
+            var token = await _context.RefreshTokens.FirstOrDefaultAsync(e => e.Token == refreshtoken, cancellationToken);
             return token;
         }
     }
