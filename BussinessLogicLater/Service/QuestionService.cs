@@ -1,9 +1,12 @@
 ﻿using BussinessLogicLater.IService;
+using DataAccessLayer.Data;
 using DataAccessLayer.DTOs;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
+using DataAccessLayer.Repository;
 using MapsterMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace BussinessLogicLater.Service
@@ -11,14 +14,17 @@ namespace BussinessLogicLater.Service
     public class QuestionService : IQuestionService
     {
         private readonly IQuestionRepository _questionRepository;
-        private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _contextAccessor;
+        private readonly ICacheService _cacheService;
+        private readonly IMapper _mapper;
+        private const string _cachePrefix = "availableQuestions";
 
-        public QuestionService(IQuestionRepository Questionrepository, IMapper mapper, IHttpContextAccessor contextAccessor)
+        public QuestionService(IQuestionRepository Questionrepository, IMapper mapper, IHttpContextAccessor contextAccessor, ICacheService cacheService)
         {
             _questionRepository = Questionrepository;
             _mapper = mapper;
             _contextAccessor = contextAccessor;
+            _cacheService = cacheService;
         }
 
         public async Task<Result<IEnumerable<QuestionResponse>>> GetAllAsync(int PollId, CancellationToken cancellationToken)
@@ -26,6 +32,51 @@ namespace BussinessLogicLater.Service
             var data = await _questionRepository.GetAllWithIncludeAsync(PollId, cancellationToken, nameof(Question.Answers));
 
             var response = _mapper.Map<List<QuestionResponse>>(data);
+
+            var result = Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
+
+            return result;
+        }
+
+        public async Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int PollId, CancellationToken cancellationToken)
+        {
+            //Validate User
+            var userId = _contextAccessor.HttpContext!
+               .User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId is null)
+                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status401Unauthorized, new[] { "unauthorized user" });
+
+
+            var hasUserVotedBefore = await _questionRepository.HasUserVotedAsync(PollId, userId, cancellationToken);
+
+            if (hasUserVotedBefore)
+                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status400BadRequest, new[] { "User has already voted" });
+
+
+            var IsPollExist = await _questionRepository.IsPollActiveAsync(PollId, cancellationToken);
+
+            if (!IsPollExist)
+                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
+
+            //Check if exist in cache
+            var cacheKey = $"{_cachePrefix}-{PollId}";
+
+            var cachedQusetions = await _cacheService.GetAsync<IEnumerable<QuestionResponse>>(cacheKey, cancellationToken);
+
+            if (cachedQusetions is not null)
+                return Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, cachedQusetions);
+
+            //If not in cache
+            var data = await _questionRepository.GetAllWithIncludeAsync(PollId, cancellationToken, nameof(Question.Answers));
+
+            var response = _mapper.Map<List<QuestionResponse>>(data);
+
+            if (!response.Any())
+                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "No questions found for this poll" });
+
+            //Set to cache
+            await _cacheService.SetAsync(cacheKey, response, cancellationToken);
 
             var result = Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
 
@@ -140,6 +191,10 @@ namespace BussinessLogicLater.Service
             _questionRepository.Update(question);
             await _questionRepository.SaveChangesAsync(cancellationToken);
 
+            //Remove cached data
+            var cacheKey = $"{_cachePrefix}-{PollId}";
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+
             return Result<bool>.Success(StatusCodes.Status202Accepted, true);
 
         }
@@ -153,6 +208,10 @@ namespace BussinessLogicLater.Service
 
             _questionRepository.Delete(question);
             await _questionRepository.SaveChangesAsync(cancellationToken);
+
+            //Remove cached data
+            var cacheKey = $"{_cachePrefix}-{PollId}";
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status204NoContent, true);
         }

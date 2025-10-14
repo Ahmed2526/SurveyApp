@@ -28,6 +28,11 @@ namespace SurveyAppAPI
             builder.Services.AddAuthorization();
 
 
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "localhost:6379"; // your Redis server
+            });
+
             // Read Serilog configuration from appsettings.json
             Log.Logger = new LoggerConfiguration()
                  .ReadFrom.Configuration(builder.Configuration)

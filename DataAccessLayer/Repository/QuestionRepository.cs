@@ -11,7 +11,20 @@ namespace DataAccessLayer.Repository
         {
 
         }
-
+        public async Task<bool> IsPollActiveAsync(int pollId, CancellationToken cancellationToken)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await _context.Polls.AnyAsync(p =>
+                p.Id == pollId &&
+                p.IsPublished &&
+                p.StartsAt < today &&
+                p.EndsAt > today, cancellationToken);
+        }
+        public async Task<bool> HasUserVotedAsync(int pollId, string userId, CancellationToken cancellationToken)
+        {
+            return await _context.Votes
+                .AnyAsync(v => v.PollId == pollId && v.UserId == userId, cancellationToken);
+        }
 
         public async Task<IEnumerable<Question>> GetAllWithIncludeAsync(int PollId, CancellationToken cancellationToken, params string[] includes)
         {

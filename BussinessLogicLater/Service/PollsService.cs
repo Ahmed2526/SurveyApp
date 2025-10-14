@@ -12,19 +12,34 @@ namespace BussinessLogicLater.Service
     {
         private readonly IRepository<Poll> _pollsRepository;
         private readonly IHttpContextAccessor _contextAccessor;
+        private readonly ICacheService _cacheService;
         private readonly IMapper _mapper;
 
-        public PollsService(IRepository<Poll> pollsRepository, IMapper mapper, IHttpContextAccessor contextAccessor)
+        public PollsService(IRepository<Poll> pollsRepository, IMapper mapper, IHttpContextAccessor contextAccessor, ICacheService cacheService)
         {
             _pollsRepository = pollsRepository;
             _mapper = mapper;
             _contextAccessor = contextAccessor;
+            _cacheService = cacheService;
         }
 
         public async Task<Result<IEnumerable<PollDto>>> GetAllAsync(CancellationToken cancellationToken)
         {
+            var cacheKey = "polls:all";
+
+            var cachedPolls = await _cacheService.GetAsync<IEnumerable<PollDto>>(cacheKey, cancellationToken);
+
+            if (cachedPolls is not null)
+                return Result<IEnumerable<PollDto>>.Success(StatusCodes.Status200OK, cachedPolls);
+
+
             var polls = await _pollsRepository.GetAllAsync(cancellationToken);
             var pollsDto = _mapper.Map<IEnumerable<PollDto>>(polls);
+
+            if (pollsDto.Any())
+            {
+                await _cacheService.SetAsync(cacheKey, pollsDto, cancellationToken);
+            }
 
             var result = Result<IEnumerable<PollDto>>.Success(StatusCodes.Status200OK, pollsDto);
             return result;
@@ -56,6 +71,10 @@ namespace BussinessLogicLater.Service
             await _pollsRepository.AddAsync(poll, cancellationToken);
             await _pollsRepository.SaveChangesAsync(cancellationToken);
 
+            //Remove cached data
+            var cacheKey = "polls:all";
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+
             var polldto = _mapper.Map<PollDto>(poll);
 
             return Result<PollDto>.Success(StatusCodes.Status201Created, polldto);
@@ -85,6 +104,10 @@ namespace BussinessLogicLater.Service
             _pollsRepository.Update(poll);
             await _pollsRepository.SaveChangesAsync(cancellationToken);
 
+            //Remove cached data
+            var cacheKey = "polls:all";
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
 
@@ -97,6 +120,10 @@ namespace BussinessLogicLater.Service
 
             _pollsRepository.Delete(poll);
             await _pollsRepository.SaveChangesAsync(cancellationToken);
+
+            //Remove cached data
+            var cacheKey = "polls:all";
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }

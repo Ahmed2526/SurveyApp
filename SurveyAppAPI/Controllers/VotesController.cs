@@ -2,7 +2,6 @@
 using DataAccessLayer.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace SurveyAppAPI.Controllers
 {
@@ -12,10 +11,23 @@ namespace SurveyAppAPI.Controllers
     public class VotesController : ControllerBase
     {
         private readonly IVotesService _votesService;
+        private readonly IQuestionService _questionService;
 
-        public VotesController(IVotesService votesService)
+        public VotesController(IVotesService votesService, IQuestionService questionService)
         {
             _votesService = votesService;
+            _questionService = questionService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPoll([FromRoute] int PollId, CancellationToken cancellationToken)
+        {
+            var response = await _questionService.GetAvailableAsync(PollId, cancellationToken);
+
+            if (response.IsSuccess)
+                return Ok(response);
+
+            return BadRequest(response);
         }
 
         [HttpPost]

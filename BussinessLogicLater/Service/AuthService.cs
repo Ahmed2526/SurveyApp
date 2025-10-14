@@ -184,7 +184,7 @@ namespace BussinessLogicLater.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,"Something went wrong while decoding the token");
+                _logger.LogError(ex, "Something went wrong while decoding the token");
             }
 
             return null;

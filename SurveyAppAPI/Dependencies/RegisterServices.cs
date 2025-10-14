@@ -102,6 +102,7 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped<IPollsService, PollsService>();
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<IVotesService, VotesService>();
+            services.AddScoped<ICacheService, RedisCacheService>();
 
         }
 

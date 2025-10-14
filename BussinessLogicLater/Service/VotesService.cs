@@ -1,12 +1,9 @@
 ﻿using BussinessLogicLater.IService;
-using DataAccessLayer.Data;
 using DataAccessLayer.DTOs;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace BussinessLogicLater.Service

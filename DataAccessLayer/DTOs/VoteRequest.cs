@@ -1,7 +1,4 @@
-﻿using SurveyAppAPI.DataAnnotations;
-using System.ComponentModel.DataAnnotations;
-
-namespace DataAccessLayer.DTOs
+﻿namespace DataAccessLayer.DTOs
 {
     public class VoteRequest
     {

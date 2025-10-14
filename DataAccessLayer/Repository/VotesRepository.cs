@@ -3,11 +3,6 @@ using DataAccessLayer.DTOs;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccessLayer.Repository
 {
@@ -62,6 +57,6 @@ namespace DataAccessLayer.Repository
         {
             await _context.AddAsync(vote, cancellationToken);
         }
-       
+
     }
 }
