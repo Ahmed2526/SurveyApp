@@ -17,7 +17,7 @@ namespace DataAccessLayer.Repository
 
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
         {
-            var data = await _dbSet.ToListAsync(cancellationToken);
+            var data = await _dbSet.AsNoTracking().ToListAsync(cancellationToken);
             return data;
         }
         public async Task<T> GetByIdAsync(int id, CancellationToken cancellationToken)

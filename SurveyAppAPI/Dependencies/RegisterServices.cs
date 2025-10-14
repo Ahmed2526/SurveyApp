@@ -96,10 +96,13 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IQuestionRepository, QuestionRepository>();
+            services.AddScoped<IVotesRepository, VotesRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPollsService, PollsService>();
             services.AddScoped<IQuestionService, QuestionService>();
+            services.AddScoped<IVotesService, VotesService>();
+
         }
 
 

@@ -15,12 +15,10 @@ namespace DataAccessLayer.Repository
 
         public async Task<IEnumerable<Question>> GetAllWithIncludeAsync(int PollId, CancellationToken cancellationToken, params string[] includes)
         {
-            var query = _context.Questions.Where(e => e.PollId == PollId && e.IsActive == true).AsNoTracking();
+            var query = _context.Questions.Where(e => e.PollId == PollId).AsNoTracking();
 
             foreach (var include in includes)
-            {
                 query = query.Include(include);
-            }
 
             var result = await query.ToListAsync(cancellationToken);
 
@@ -32,9 +30,7 @@ namespace DataAccessLayer.Repository
             IQueryable<Question> query = _context.Questions.Where(e => e.PollId == PollId).AsQueryable();
 
             foreach (var include in includes)
-            {
                 query = query.Include(include);
-            }
 
             var result = await query.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
 

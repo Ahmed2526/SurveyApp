@@ -1,5 +1,4 @@
 ﻿using BussinessLogicLater.IService;
-using DataAccessLayer.Data;
 using DataAccessLayer.DTOs;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
@@ -14,13 +13,11 @@ namespace BussinessLogicLater.Service
         private readonly IQuestionRepository _questionRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _contextAccessor;
-        private readonly ApplicationDbContext _context;
 
-        public QuestionService(IQuestionRepository Questionrepository, IMapper mapper, ApplicationDbContext context, IHttpContextAccessor contextAccessor)
+        public QuestionService(IQuestionRepository Questionrepository, IMapper mapper, IHttpContextAccessor contextAccessor)
         {
             _questionRepository = Questionrepository;
             _mapper = mapper;
-            _context = context;
             _contextAccessor = contextAccessor;
         }
 

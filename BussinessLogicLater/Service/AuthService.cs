@@ -4,6 +4,7 @@ using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,13 +20,15 @@ namespace BussinessLogicLater.Service
         private readonly JwtSettings _jwtSettings;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IHttpContextAccessor _contextAccessor;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IOptions<JwtSettings> options, IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor contextAccessor)
+        public AuthService(UserManager<ApplicationUser> userManager, IOptions<JwtSettings> options, IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor contextAccessor, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _jwtSettings = options.Value;
             _refreshTokenRepository = refreshTokenRepository;
             _contextAccessor = contextAccessor;
+            _logger = logger;
         }
 
         public async Task<Result<AuthResult>> RegisterAsync(RegisterDto registerCredentials, CancellationToken cancellationToken)
@@ -178,11 +181,10 @@ namespace BussinessLogicLater.Service
                     return null;
                 }
                 return principal.FindFirstValue(ClaimTypes.NameIdentifier);
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                _logger.LogError(ex,"Something went wrong while decoding the token");
             }
 
             return null;

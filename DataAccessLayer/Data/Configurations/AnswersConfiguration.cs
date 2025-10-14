@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DataAccessLayer.Data.Configurations
 {
-    public class AnswerConfiguration : IEntityTypeConfiguration<Answer>
+    public class AnswersConfiguration : IEntityTypeConfiguration<Answer>
     {
         public void Configure(EntityTypeBuilder<Answer> builder)
         {

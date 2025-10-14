@@ -11,10 +11,11 @@ namespace SurveyAppAPI.Controllers
     public class PollsController : ControllerBase
     {
         private readonly IPollsService _pollsService;
-
-        public PollsController(IPollsService pollsService)
+        private readonly ILogger<PollsController> _logger;
+        public PollsController(IPollsService pollsService, ILogger<PollsController> logger)
         {
             _pollsService = pollsService;
+            _logger = logger;
         }
 
         [HttpGet]

@@ -1,3 +1,4 @@
+﻿using Serilog;
 using SurveyAppAPI.Dependencies;
 using SurveyAppAPI.MiddleWares;
 
@@ -25,6 +26,16 @@ namespace SurveyAppAPI
             // Add Authentication
             builder.Services.RegisterJwtBearer(builder.Configuration);
             builder.Services.AddAuthorization();
+
+
+            // Read Serilog configuration from appsettings.json
+            Log.Logger = new LoggerConfiguration()
+                 .ReadFrom.Configuration(builder.Configuration)
+                 .Enrich.FromLogContext()
+                 .CreateLogger();
+
+            // Replace default logging
+            builder.Host.UseSerilog();
 
 
             var app = builder.Build();
