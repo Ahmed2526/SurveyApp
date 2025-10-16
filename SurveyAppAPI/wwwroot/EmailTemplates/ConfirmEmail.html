@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7fa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a202c;
+            margin: 0 0 20px 0;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #4a5568;
+            margin: 0 0 30px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+            .cta-button:visited {
+                color: #ffffff !important;
+            }
+
+            .cta-button:hover {
+                transform: translateY(-2px);
+            }
+
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 40px 0;
+        }
+
+        .info-box {
+            background-color: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+
+            .info-box p {
+                margin: 0;
+                font-size: 14px;
+                color: #4a5568;
+                line-height: 1.6;
+            }
+
+        .footer {
+            background-color: #f7fafc;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #718096;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+            .footer-link:hover {
+                text-decoration: underline;
+            }
+
+        .social-links {
+            margin: 20px 0 10px 0;
+        }
+
+            .social-links a {
+                display: inline-block;
+                margin: 0 8px;
+                color: #718096;
+                text-decoration: none;
+                font-size: 14px;
+            }
+
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+
+            .greeting {
+                font-size: 22px;
+            }
+
+            .message {
+                font-size: 15px;
+            }
+
+            .cta-button {
+                padding: 14px 30px;
+                font-size: 15px;
+            }
+
+            .footer {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f7fa; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <div class="email-container">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1 class="logo">📊 SurveyApp</h1>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="content">
+                        <h2 class="greeting">Welcome, {{UserName}}! 👋</h2>
+
+                        <p class="message">
+                            Thank you for signing up with SurveyApp! We're excited to have you on board.
+                            To get started and unlock all features, please confirm your email address by clicking the button below.
+                        </p>
+
+                        <div class="button-container">
+                            <a href="{{ConfirmationUrl}}" class="cta-button" style="color: #ffffff !important;">Confirm Email Address</a>
+                        </div>
+
+                        <div class="info-box">
+                            <p>
+                                <strong>🔒 Security Note:</strong> This link will expire in 24 hours for your security.
+                                If you didn't create an account with SurveyApp, please ignore this email.
+                            </p>
+                        </div>
+
+                        <hr class="divider">
+
+                        <p class="message" style="margin-bottom: 10px;">
+                            <strong>Having trouble with the button?</strong>
+                        </p>
+                        <p class="message" style="font-size: 14px; color: #718096;">
+                            Copy and paste this link into your browser:<br>
+                            <a href="{{ConfirmationUrl}}" style="color: #667eea; word-break: break-all;">{{ConfirmationUrl}}</a>
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="footer">
+                        <p class="footer-text">
+                            <strong>SurveyApp Team</strong>
+                        </p>
+                        <p class="footer-text">
+                            Making surveys simple and powerful
+                        </p>
+
+                        <div class="social-links">
+                            <a href="#" class="footer-link">Website</a> •
+                            <a href="#" class="footer-link">Help Center</a> •
+                            <a href="#" class="footer-link">Contact Us</a>
+                        </div>
+
+                        <p class="footer-text" style="margin-top: 20px;">
+                            © 2025 SurveyApp. All rights reserved.
+                        </p>
+                        <p class="footer-text">
+                            This email was sent to {{UserName}} because you signed up for a SurveyApp account.
+                        </p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -17,6 +17,12 @@ namespace DataAccessLayer.Repository
             var token = await _context.RefreshTokens.FirstOrDefaultAsync(e => e.Token == refreshtoken, cancellationToken);
             return token;
         }
+
+        public async Task DeleteTokensForUserAsync(string UserId, CancellationToken cancellationToken)
+        {
+            var tokens = _context.RefreshTokens.Where(e => e.UserId == UserId);
+            _context.RefreshTokens.RemoveRange(tokens);
+        }
     }
 
 

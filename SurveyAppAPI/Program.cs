@@ -1,5 +1,4 @@
-﻿using Serilog;
-using SurveyAppAPI.Dependencies;
+﻿using SurveyAppAPI.Dependencies;
 using SurveyAppAPI.MiddleWares;
 
 namespace SurveyAppAPI
@@ -27,20 +26,11 @@ namespace SurveyAppAPI
             builder.Services.RegisterJwtBearer(builder.Configuration);
             builder.Services.AddAuthorization();
 
+            //Register Redis
+            builder.Services.RegisterRedis();
 
-            builder.Services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = "localhost:6379"; // your Redis server
-            });
-
-            // Read Serilog configuration from appsettings.json
-            Log.Logger = new LoggerConfiguration()
-                 .ReadFrom.Configuration(builder.Configuration)
-                 .Enrich.FromLogContext()
-                 .CreateLogger();
-
-            // Replace default logging
-            builder.Host.UseSerilog();
+            //Register Serilog
+            builder.RegisterSerilog();
 
 
             var app = builder.Build();

@@ -19,7 +19,7 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> login(LoginDto loginCredentials, CancellationToken cancellationToken)
+        public async Task<IActionResult> login([FromBody] LoginDto loginCredentials, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(loginCredentials, cancellationToken);
 
@@ -31,7 +31,7 @@ namespace SurveyAppAPI.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register(RegisterDto registerCredentials, CancellationToken cancellationToken)
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerCredentials, CancellationToken cancellationToken)
         {
             var result = await _authService.RegisterAsync(registerCredentials, cancellationToken);
 
@@ -42,8 +42,68 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpPost]
+        [Route("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ChangePasswordAsync(request, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("request-reset-password")]
+        public async Task<IActionResult> RequestResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.RequestResetPasswordAsync(request, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPassword request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ResetPasswordAsync(request, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ConfirmEmail(userId, token, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmation([FromQuery] string email, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ResendConfirmEmail(email, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("refresh-token")]
-        public async Task<IActionResult> RefreshToken(RefreshTokenRequest tokenRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest tokenRequest, CancellationToken cancellationToken)
         {
             var result = await _authService.RefreshToken(tokenRequest.refreshToken, tokenRequest.oldToken, cancellationToken);
 

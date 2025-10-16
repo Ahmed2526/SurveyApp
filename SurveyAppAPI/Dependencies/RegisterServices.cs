@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 namespace SurveyAppAPI.Dependencies
@@ -33,9 +34,12 @@ namespace SurveyAppAPI.Dependencies
                     .GetConnectionString("DefaultConnection")));
 
             //Add Identity
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
         }
 
         public static void RegisterMapster(this IServiceCollection services)
@@ -88,6 +92,27 @@ namespace SurveyAppAPI.Dependencies
             });
         }
 
+        public static void RegisterRedis(this IServiceCollection services)
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "localhost:6379"; // your Redis server
+            });
+        }
+
+        public static void RegisterSerilog(this WebApplicationBuilder builder)
+        {
+            // Read Serilog configuration from appsettings.json
+            Log.Logger = new LoggerConfiguration()
+                 .ReadFrom.Configuration(builder.Configuration)
+                 .Enrich.FromLogContext()
+                 .CreateLogger();
+
+            // Replace default logging
+            builder.Host.UseSerilog();
+        }
+
+
         public static void RegisterCustomServices(this IServiceCollection services, ConfigurationManager Configuration)
         {
             services.Configure<JwtSettings>(
@@ -103,6 +128,7 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<IVotesService, VotesService>();
             services.AddScoped<ICacheService, RedisCacheService>();
+            services.AddTransient<IEmailService, SendGridEmailService>();
 
         }
 
