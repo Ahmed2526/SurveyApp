@@ -12,7 +12,5 @@ namespace DataAccessLayer.IRepository
         Task<bool> CheckUniqueQuestionInPollForUpdate(int PollId, int QuestionId, string Content, CancellationToken cancellationToken);
         bool CheckUniqueAnswers(IEnumerable<string> Answers);
 
-
-
     }
 }

@@ -1,7 +1,9 @@
 ﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
+using DataAccessLayer.Enums;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -19,14 +21,17 @@ namespace BussinessLogicLater.Service
     public class AuthService : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly JwtSettings _jwtSettings;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly ILogger<AuthService> _logger;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _config;
+        private readonly IBackgroundJobClient _jobClient;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IOptions<JwtSettings> options, IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor contextAccessor, ILogger<AuthService> logger, IEmailService emailService, IConfiguration config)
+
+        public AuthService(UserManager<ApplicationUser> userManager, IOptions<JwtSettings> options, IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor contextAccessor, ILogger<AuthService> logger, IEmailService emailService, IConfiguration config, IBackgroundJobClient jobClient, RoleManager<ApplicationRole> roleManager)
         {
             _userManager = userManager;
             _jwtSettings = options.Value;
@@ -35,6 +40,8 @@ namespace BussinessLogicLater.Service
             _logger = logger;
             _emailService = emailService;
             _config = config;
+            _jobClient = jobClient;
+            _roleManager = roleManager;
         }
 
         public async Task<Result<bool>> RegisterAsync(RegisterDto registerCredentials, CancellationToken cancellationToken)
@@ -63,8 +70,19 @@ namespace BussinessLogicLater.Service
                 return Result<bool>.Fail(StatusCodes.Status400BadRequest, errors.ToArray());
             }
 
+            var addtoRoleResult = await _userManager.AddToRoleAsync(user, Roles.Member);
+
+            if (!addtoRoleResult.Succeeded)
+            {
+                var errors = addtoRoleResult.Errors.Select(e => e.Description).ToArray();
+                return Result<bool>.Fail(StatusCodes.Status400BadRequest, errors);
+            }
+
+
             //Send Confirmation Email
-            return await sendConfirmEmailAsync(user, cancellationToken);
+            _jobClient.Enqueue(() => sendConfirmEmailAsync(user.Id, CancellationToken.None));
+
+            return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
         public async Task<Result<AuthResult>> LoginAsync(LoginDto loginCredentials, CancellationToken cancellationToken)
         {
@@ -82,7 +100,7 @@ namespace BussinessLogicLater.Service
                 return Result<AuthResult>
                     .Fail(StatusCodes.Status403Forbidden, new[] { "Email not confirmed. Please confirm your email in order to signin" });
 
-            var jwtToken = GenerateJWTtoken(user);
+            var jwtToken = await GenerateJWTtoken(user);
             var refreshToken = GenerateRefreshToken(user.Id);
 
             await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
@@ -97,7 +115,6 @@ namespace BussinessLogicLater.Service
             };
 
             return Result<AuthResult>.Success(StatusCodes.Status200OK, authResult);
-
         }
 
         public async Task<Result<AuthResult>> ConfirmEmail(string UserId, string Token, CancellationToken cancellationToken)
@@ -116,7 +133,7 @@ namespace BussinessLogicLater.Service
                 return Result<AuthResult>.Fail(StatusCodes.Status400BadRequest, new[] { "Invalid user/token" });
             }
 
-            var jwtToken = GenerateJWTtoken(user);
+            var jwtToken = await GenerateJWTtoken(user);
             var refreshToken = GenerateRefreshToken(user.Id);
 
             await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
@@ -143,7 +160,9 @@ namespace BussinessLogicLater.Service
                 return Result<bool>.Fail(StatusCodes.Status400BadRequest, new[] { "Email already confirmed" });
 
             //Send Confirmation Email
-            return await sendConfirmEmailAsync(user, cancellationToken);
+            _jobClient.Enqueue(() => sendConfirmEmailAsync(user.Id, CancellationToken.None));
+
+            return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
 
         public async Task<Result<bool>> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken)
@@ -181,7 +200,6 @@ namespace BussinessLogicLater.Service
 
             return Result<bool>.Success(StatusCodes.Status200OK, result.Succeeded);
         }
-
         public async Task<Result<bool>> RequestResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
@@ -190,7 +208,9 @@ namespace BussinessLogicLater.Service
                 return Result<bool>.Fail(StatusCodes.Status404NotFound, new[] { "User not found" });
 
             //Send Reset Password Email
-            return await sendResetPasswordEmailAsync(user, cancellationToken);
+            _jobClient.Enqueue(() => sendResetPasswordEmailAsync(user.Id, CancellationToken.None));
+
+            return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
         public async Task<Result<bool>> ResetPasswordAsync(ResetPassword request, CancellationToken cancellationToken)
         {
@@ -229,7 +249,7 @@ namespace BussinessLogicLater.Service
             var ip = _contextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
             var deviceInfo = _contextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString();
 
-            await SendPasswordResetSuccessEmailAsync(user, ip, deviceInfo, cancellationToken);
+            _jobClient.Enqueue(() => SendPasswordResetSuccessEmailAsync(user.Id, ip!, deviceInfo!, CancellationToken.None));
 
             return Result<bool>.Success(StatusCodes.Status200OK, true);
         }
@@ -251,7 +271,7 @@ namespace BussinessLogicLater.Service
 
             token.Revoked = DateTime.UtcNow;
 
-            var Newtoken = GenerateJWTtoken(user);
+            var Newtoken = await GenerateJWTtoken(user);
             var newRefreshToken = GenerateRefreshToken(user.Id);
 
             _refreshTokenRepository.Update(token);
@@ -285,8 +305,10 @@ namespace BussinessLogicLater.Service
 
 
         //Handle frontend url
-        private async Task<Result<bool>> sendConfirmEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+        public async Task<Result<bool>> sendConfirmEmailAsync(string userId, CancellationToken cancellationToken)
         {
+            var user = await _userManager.FindByIdAsync(userId);
+
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
@@ -319,8 +341,10 @@ namespace BussinessLogicLater.Service
 
             return Result<bool>.Success(emailResponse.StatusCode, emailResponse.Data);
         }
-        private async Task<Result<bool>> sendResetPasswordEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+        public async Task<Result<bool>> sendResetPasswordEmailAsync(string userId, CancellationToken cancellationToken)
         {
+            var user = await _userManager.FindByIdAsync(userId);
+
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
@@ -353,8 +377,10 @@ namespace BussinessLogicLater.Service
 
             return Result<bool>.Success(emailResponse.StatusCode, emailResponse.Data);
         }
-        private async Task<Result<bool>> SendPasswordResetSuccessEmailAsync(ApplicationUser user, string ipAddress, string deviceInfo, CancellationToken cancellationToken)
+        public async Task<Result<bool>> SendPasswordResetSuccessEmailAsync(string userId, string ipAddress, string deviceInfo, CancellationToken cancellationToken)
         {
+            var user = await _userManager.FindByIdAsync(userId);
+
             var frontEndUrl = _config["FrontEnd:BaseUrl"];
             var loginUrl = $"{frontEndUrl}/login";
 
@@ -420,7 +446,7 @@ namespace BussinessLogicLater.Service
 
             return null;
         }
-        private JwtTokenResult GenerateJWTtoken(ApplicationUser user)
+        private async Task<JwtTokenResult> GenerateJWTtoken(ApplicationUser user)
         {
 
             var key = new SymmetricSecurityKey(
@@ -428,13 +454,38 @@ namespace BussinessLogicLater.Service
 
             var SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+
+            // Fetch user roles
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            // Fetch direct user claims (if any)
+            var userClaims = await _userManager.GetClaimsAsync(user);
+
+            // Collect all claims from the roles the user has
+            var roleClaims = new List<Claim>();
+            foreach (var roleName in userRoles)
             {
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
-            new Claim(ClaimTypes.Role,"User")
-            };
+                var role = await _roleManager.FindByNameAsync(roleName);
+                if (role == null) continue;
+
+                var claimsForRole = await _roleManager.GetClaimsAsync(role);
+                roleClaims.AddRange(claimsForRole);
+            }
+
+            // Core claims
+            var claims = new List<Claim>
+              {
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+              };
+
+            // Add roles
+            claims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+            // Add user and role claims
+            claims.AddRange(userClaims);
+            claims.AddRange(roleClaims);
 
             var token = new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,

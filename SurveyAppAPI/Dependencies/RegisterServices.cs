@@ -6,6 +6,8 @@ using DataAccessLayer.DTOs;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
 using DataAccessLayer.Repository;
+using Hangfire;
+using Hangfire.SqlServer;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -34,7 +36,7 @@ namespace SurveyAppAPI.Dependencies
                     .GetConnectionString("DefaultConnection")));
 
             //Add Identity
-            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = true;
             })
@@ -112,6 +114,28 @@ namespace SurveyAppAPI.Dependencies
             builder.Host.UseSerilog();
         }
 
+        public static void RegisterHangfire(this WebApplicationBuilder builder)
+        {
+            var hangfireConn = builder.Configuration.GetConnectionString("HangfireConnection");
+
+            builder.Services.AddHangfire(config => config
+                  .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                  .UseSimpleAssemblyNameTypeSerializer()
+                  .UseRecommendedSerializerSettings()
+                  .UseSqlServerStorage(hangfireConn, new SqlServerStorageOptions
+                  {
+                      CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                      SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                      QueuePollInterval = TimeSpan.FromSeconds(15),
+                      UseRecommendedIsolationLevel = true,
+                      DisableGlobalLocks = true
+                  }
+            ));
+
+            // Add Hangfire server (use Worker process in prod if desired)
+            builder.Services.AddHangfireServer();
+
+        }
 
         public static void RegisterCustomServices(this IServiceCollection services, ConfigurationManager Configuration)
         {
@@ -128,6 +152,9 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<IVotesService, VotesService>();
             services.AddScoped<ICacheService, RedisCacheService>();
+            services.AddScoped<INotificationJobService, NotificationJobService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRolesService, RolesService>();
             services.AddTransient<IEmailService, SendGridEmailService>();
 
         }

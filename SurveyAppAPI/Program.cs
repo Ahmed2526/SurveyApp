@@ -1,4 +1,7 @@
-﻿using SurveyAppAPI.Dependencies;
+﻿using BussinessLogicLater.IService;
+using Hangfire;
+using SurveyAppAPI.Dependencies;
+using SurveyAppAPI.Middlewares;
 using SurveyAppAPI.MiddleWares;
 
 namespace SurveyAppAPI
@@ -32,6 +35,9 @@ namespace SurveyAppAPI
             //Register Serilog
             builder.RegisterSerilog();
 
+            //Register Hangfire
+            builder.RegisterHangfire();
+
 
             var app = builder.Build();
 
@@ -48,6 +54,24 @@ namespace SurveyAppAPI
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            //Handle Hangfire
+            if (app.Environment.IsDevelopment())
+                app.UseDevelopmentHangfireDashboard();
+
+            else
+                app.UseSecureHangfireDashboard(builder.Configuration, app.Environment);
+
+
+            //to do
+            RecurringJob.AddOrUpdate<INotificationJobService>("daily-Polls-Updates-job", job
+                => job.SendPollsDailyUpdateAsync(), Cron.Daily(0, 0),
+                new RecurringJobOptions
+                {
+                    TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time"),
+                    MisfireHandling = MisfireHandlingMode.Relaxed
+                });
+
 
             app.MapControllers();
 

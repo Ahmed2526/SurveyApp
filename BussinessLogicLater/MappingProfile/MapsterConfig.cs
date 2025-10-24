@@ -18,6 +18,8 @@ namespace BussinessLogicLater.MappingProfile
             config.NewConfig<QuestionRequest, Question>()
                 .Map(dest => dest.Answers, src => src.Answers.Select(a => new Answer { Content = a }).ToList());
 
+            config.NewConfig<ApplicationRole, RoleResponse>()
+               .Map(dest => dest.RoleId, src => src.Id);
         }
     }
 }
