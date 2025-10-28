@@ -30,7 +30,7 @@ namespace SurveyAppAPI
             builder.Services.AddAuthorization();
 
             //Register Redis
-            builder.Services.RegisterRedis();
+            builder.Services.RegisterRedis(builder.Configuration);
 
             //Register Serilog
             builder.RegisterSerilog();

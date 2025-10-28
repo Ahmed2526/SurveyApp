@@ -1,4 +1,5 @@
-﻿using DataAccessLayer.Models;
+﻿using DataAccessLayer.DTOs;
+using DataAccessLayer.Models;
 
 namespace DataAccessLayer.IRepository
 {
@@ -6,7 +7,7 @@ namespace DataAccessLayer.IRepository
     {
         Task<bool> IsPollActiveAsync(int pollId, CancellationToken cancellationToken);
         Task<bool> HasUserVotedAsync(int pollId, string userId, CancellationToken cancellationToken);
-        Task<IEnumerable<Question>> GetAllWithIncludeAsync(int PollId, CancellationToken cancellationToken, params string[] includes);
+        Task<PagedResult<Question>> GetAllWithIncludeAsync(int PollId, FilterRequest filterRequest, CancellationToken cancellationToken, params string[] includes);
         Task<Question> GetByIdWithIncludeAsync(int PollId, int id, CancellationToken cancellationToken, params string[] includes);
         Task<bool> CheckUniqueQuestionInPollForCreate(int PollId, string Content, CancellationToken cancellationToken);
         Task<bool> CheckUniqueQuestionInPollForUpdate(int PollId, int QuestionId, string Content, CancellationToken cancellationToken);

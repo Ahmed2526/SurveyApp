@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using BussinessLogicLater.IService;
+﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
 using DataAccessLayer.Models;
 using MapsterMapper;

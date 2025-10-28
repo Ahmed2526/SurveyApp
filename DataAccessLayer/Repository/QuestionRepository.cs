@@ -1,4 +1,6 @@
 ﻿using DataAccessLayer.Data;
+using DataAccessLayer.DTOs;
+using DataAccessLayer.Entensions;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
@@ -26,14 +28,14 @@ namespace DataAccessLayer.Repository
                 .AnyAsync(v => v.PollId == pollId && v.UserId == userId, cancellationToken);
         }
 
-        public async Task<IEnumerable<Question>> GetAllWithIncludeAsync(int PollId, CancellationToken cancellationToken, params string[] includes)
+        public async Task<PagedResult<Question>> GetAllWithIncludeAsync(int PollId, FilterRequest filterRequest, CancellationToken cancellationToken, params string[] includes)
         {
             var query = _context.Questions.Where(e => e.PollId == PollId).AsNoTracking();
 
             foreach (var include in includes)
                 query = query.Include(include);
 
-            var result = await query.ToListAsync(cancellationToken);
+            var result = await query.ToPagedResultAsync(filterRequest.PageNumber, filterRequest.PageSize, cancellationToken);
 
             return result;
         }

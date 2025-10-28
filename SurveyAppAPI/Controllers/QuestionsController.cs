@@ -18,9 +18,9 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromRoute] int PollId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Get([FromRoute] int PollId, [FromQuery] FilterRequest filterRequest, CancellationToken cancellationToken)
         {
-            var result = await _questionService.GetAllAsync(PollId, cancellationToken);
+            var result = await _questionService.GetAllAsync(PollId, filterRequest, cancellationToken);
 
             if (result.IsSuccess)
                 return Ok(result);

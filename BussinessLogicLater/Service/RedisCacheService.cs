@@ -1,5 +1,6 @@
 ﻿using BussinessLogicLater.IService;
 using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 using System.Text.Json;
 
 namespace BussinessLogicLater.Service
@@ -7,9 +8,11 @@ namespace BussinessLogicLater.Service
     public class RedisCacheService : ICacheService
     {
         private readonly IDistributedCache _distributedCache;
-        public RedisCacheService(IDistributedCache distributedCache)
+        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        public RedisCacheService(IDistributedCache distributedCache, IConnectionMultiplexer connectionMultiplexer)
         {
             _distributedCache = distributedCache;
+            _connectionMultiplexer = connectionMultiplexer;
         }
 
         public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken)
@@ -36,5 +39,22 @@ namespace BussinessLogicLater.Service
             await _distributedCache.RemoveAsync(key, cancellationToken);
         }
 
+        public async Task RemoveByPrefixAsync(string prefix, CancellationToken cancellationToken)
+        {
+            var server = GetServer();
+            var db = _connectionMultiplexer.GetDatabase();
+            var keys = server.Keys(pattern: $"{prefix}*").ToArray();
+
+            foreach (var key in keys)
+            {
+                await db.KeyDeleteAsync(key);
+            }
+        }
+
+        private IServer GetServer()
+        {
+            var endpoint = _connectionMultiplexer.GetEndPoints().First();
+            return _connectionMultiplexer.GetServer(endpoint);
+        }
     }
 }

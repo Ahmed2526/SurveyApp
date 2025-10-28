@@ -24,58 +24,58 @@ namespace BussinessLogicLater.Service
             _cacheService = cacheService;
         }
 
-        public async Task<Result<IEnumerable<QuestionResponse>>> GetAllAsync(int PollId, CancellationToken cancellationToken)
+        public async Task<Result<PagedResult<QuestionResponse>>> GetAllAsync(int PollId, FilterRequest filterRequest, CancellationToken cancellationToken)
         {
-            var data = await _questionRepository.GetAllWithIncludeAsync(PollId, cancellationToken, nameof(Question.Answers));
+            var data = await _questionRepository.GetAllWithIncludeAsync(PollId, filterRequest, cancellationToken, nameof(Question.Answers));
 
-            var response = _mapper.Map<List<QuestionResponse>>(data);
+            var response = _mapper.Map<PagedResult<QuestionResponse>>(data);
 
-            var result = Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
+            var result = Result<PagedResult<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
 
             return result;
         }
 
-        public async Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int PollId, CancellationToken cancellationToken)
+        public async Task<Result<PagedResult<QuestionResponse>>> GetAvailableAsync(int PollId, FilterRequest filterRequest, CancellationToken cancellationToken)
         {
             //Validate User
             var userId = _contextAccessor.HttpContext!
                .User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (userId is null)
-                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status401Unauthorized, new[] { "unauthorized user" });
+                return Result<PagedResult<QuestionResponse>>.Fail(StatusCodes.Status401Unauthorized, new[] { "unauthorized user" });
 
 
             var hasUserVotedBefore = await _questionRepository.HasUserVotedAsync(PollId, userId, cancellationToken);
 
             if (hasUserVotedBefore)
-                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status400BadRequest, new[] { "User has already voted" });
+                return Result<PagedResult<QuestionResponse>>.Fail(StatusCodes.Status400BadRequest, new[] { "User has already voted" });
 
 
             var IsPollExist = await _questionRepository.IsPollActiveAsync(PollId, cancellationToken);
 
             if (!IsPollExist)
-                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
+                return Result<PagedResult<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "Poll not found" });
 
             //Check if exist in cache
-            var cacheKey = $"{_cachePrefix}-{PollId}";
+            var cacheKey = GenerateCacheKey(PollId, filterRequest);
 
-            var cachedQusetions = await _cacheService.GetAsync<IEnumerable<QuestionResponse>>(cacheKey, cancellationToken);
+            var cachedQusetions = await _cacheService.GetAsync<PagedResult<QuestionResponse>>(cacheKey, cancellationToken);
 
             if (cachedQusetions is not null)
-                return Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, cachedQusetions);
-
+                return Result<PagedResult<QuestionResponse>>.Success(StatusCodes.Status200OK, cachedQusetions);
+            
             //If not in cache
-            var data = await _questionRepository.GetAllWithIncludeAsync(PollId, cancellationToken, nameof(Question.Answers));
+            var data = await _questionRepository.GetAllWithIncludeAsync(PollId, filterRequest, cancellationToken, nameof(Question.Answers));
 
-            var response = _mapper.Map<List<QuestionResponse>>(data);
+            var response = _mapper.Map<PagedResult<QuestionResponse>>(data);
 
-            if (!response.Any())
-                return Result<IEnumerable<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "No questions found for this poll" });
+            if (!response.Items.Any())
+                return Result<PagedResult<QuestionResponse>>.Fail(StatusCodes.Status404NotFound, new[] { "No questions found for this poll" });
 
             //Set to cache
             await _cacheService.SetAsync(cacheKey, response, cancellationToken);
 
-            var result = Result<IEnumerable<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
+            var result = Result<PagedResult<QuestionResponse>>.Success(StatusCodes.Status200OK, response);
 
             return result;
         }
@@ -119,6 +119,10 @@ namespace BussinessLogicLater.Service
 
             await _questionRepository.AddAsync(question, cancellationToken);
             await _questionRepository.SaveChangesAsync(cancellationToken);
+
+            //Remove ALL cached pages for this poll
+            var cachePrefix = $"{_cachePrefix}:poll:{PollId}";
+            await _cacheService.RemoveByPrefixAsync(cachePrefix, cancellationToken);
 
             var result = _mapper.Map<QuestionResponse>(question);
 
@@ -188,12 +192,11 @@ namespace BussinessLogicLater.Service
             _questionRepository.Update(question);
             await _questionRepository.SaveChangesAsync(cancellationToken);
 
-            //Remove cached data
-            var cacheKey = $"{_cachePrefix}-{PollId}";
-            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+            //Remove ALL cached pages for this poll
+            var cachePrefix = $"{_cachePrefix}:poll:{PollId}";
+            await _cacheService.RemoveByPrefixAsync(cachePrefix, cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status202Accepted, true);
-
         }
 
         public async Task<Result<bool>> DeleteAsync(int PollId, int QuestionId, CancellationToken cancellationToken)
@@ -206,11 +209,17 @@ namespace BussinessLogicLater.Service
             _questionRepository.Delete(question);
             await _questionRepository.SaveChangesAsync(cancellationToken);
 
-            //Remove cached data
-            var cacheKey = $"{_cachePrefix}-{PollId}";
-            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+            //Remove ALL cached pages for this poll
+            var cachePrefix = $"{_cachePrefix}:poll:{PollId}";
+            await _cacheService.RemoveByPrefixAsync(cachePrefix, cancellationToken);
 
             return Result<bool>.Success(StatusCodes.Status204NoContent, true);
         }
+
+        private string GenerateCacheKey(int pollId, FilterRequest filterRequest)
+        {
+            return $"{_cachePrefix}:poll:{pollId}:page:{filterRequest.PageNumber}:size:{filterRequest.PageSize}";
+        }
+
     }
 }

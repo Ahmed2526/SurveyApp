@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using StackExchange.Redis;
 using System.Text;
 
 namespace SurveyAppAPI.Dependencies
@@ -100,11 +101,18 @@ namespace SurveyAppAPI.Dependencies
             });
         }
 
-        public static void RegisterRedis(this IServiceCollection services)
+        public static void RegisterRedis(this IServiceCollection services, ConfigurationManager Configuration)
         {
+            // Add Redis connection multiplexer
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var configuration = Configuration.GetConnectionString("Redis");
+                return ConnectionMultiplexer.Connect(configuration!);
+            });
+
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = "localhost:6379"; // your Redis server
+                options.Configuration = Configuration.GetConnectionString("Redis");
             });
         }
 
@@ -152,6 +160,7 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IQuestionRepository, QuestionRepository>();
             services.AddScoped<IVotesRepository, VotesRepository>();
+            services.AddScoped<IPollRepository, PollRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPollsService, PollsService>();

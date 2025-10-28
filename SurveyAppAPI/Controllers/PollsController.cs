@@ -19,10 +19,9 @@ namespace SurveyAppAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(CancellationToken cancellationToken)
+        public async Task<IActionResult> Get([FromQuery] FilterRequest filterRequest, CancellationToken cancellationToken)
         {
-            var data = await _pollsService.GetAllAsync(cancellationToken);
-
+            var data = await _pollsService.GetAllAsync(filterRequest, cancellationToken);
             return Ok(data);
         }
 

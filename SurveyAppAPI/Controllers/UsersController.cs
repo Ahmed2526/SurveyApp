@@ -1,11 +1,14 @@
 ﻿using BussinessLogicLater.IService;
 using DataAccessLayer.DTOs;
+using DataAccessLayer.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyAppAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = DefaultRoles.Admin)]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
