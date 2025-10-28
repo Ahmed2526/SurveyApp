@@ -8,7 +8,7 @@ namespace SurveyAppAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = DefaultRoles.Admin)]
     public class RolesController : ControllerBase
     {
         private readonly IRolesService _rolesService;

@@ -38,6 +38,12 @@ namespace SurveyAppAPI.Dependencies
             //Add Identity
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
+                // Lockout settings
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); // Lock for 5 minutes
+                options.Lockout.MaxFailedAccessAttempts = 5; // 5 failed attempts = lockout
+                options.Lockout.AllowedForNewUsers = true;
+
+                options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -153,8 +159,9 @@ namespace SurveyAppAPI.Dependencies
             services.AddScoped<IVotesService, VotesService>();
             services.AddScoped<ICacheService, RedisCacheService>();
             services.AddScoped<INotificationJobService, NotificationJobService>();
-            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IRolesService, RolesService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddTransient<IEmailService, SendGridEmailService>();
 
         }

@@ -2,7 +2,7 @@
 
 namespace DataAccessLayer.Models
 {
-    public class ApplicationClaims
+    public class Permissions
     {
         public static string Type { get; set; } = "Permissions";
         // Permission-based claims
@@ -15,7 +15,7 @@ namespace DataAccessLayer.Models
         //Automatically gets all string constants declared above
         public static IEnumerable<string> All()
         {
-            return typeof(ApplicationClaims)
+            return typeof(Permissions)
                 .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                 .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
                 .Select(f => f.GetValue(null)!.ToString()!);

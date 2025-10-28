@@ -41,8 +41,8 @@ namespace DataAccessLayer.Data.Configurations
             var adminRole = new ApplicationRole
             {
                 Id = adminRoleId,
-                Name = Roles.Admin,
-                NormalizedName = Roles.Admin.ToUpper(),
+                Name = DefaultRoles.Admin,
+                NormalizedName = DefaultRoles.Admin.ToUpper(),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 IsDefault = false
             };
@@ -52,8 +52,8 @@ namespace DataAccessLayer.Data.Configurations
             var defaultRole = new ApplicationRole()
             {
                 Id = defaultRoleId,
-                Name = Roles.Member,
-                NormalizedName = Roles.Member.ToUpper(),
+                Name = DefaultRoles.Member,
+                NormalizedName = DefaultRoles.Member.ToUpper(),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 IsDefault = true
             };
@@ -85,12 +85,12 @@ namespace DataAccessLayer.Data.Configurations
             var defaultRoleId = "019a0ee5-cea2-7ffa-9ebe-27d9dad81e83";
 
             // Collect role claims dynamically
-            var claims = ApplicationClaims.All()
+            var claims = Permissions.All()
                 .Select((claim, index) => new IdentityRoleClaim<string>
                 {
                     Id = index + 1, // Each claim needs a unique Id
                     RoleId = adminRoleId,
-                    ClaimType = ApplicationClaims.Type,
+                    ClaimType = Permissions.Type,
                     ClaimValue = claim
                 })
                 .ToArray();

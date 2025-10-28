@@ -55,7 +55,8 @@ namespace BussinessLogicLater.Service
             {
                 UserName = registerCredentials.UserName,
                 Email = registerCredentials.Email,
-                PhoneNumber = registerCredentials.Phone
+                PhoneNumber = registerCredentials.Phone,
+                LockoutEnabled = true
             };
 
             var result = await _userManager.CreateAsync(user, registerCredentials.Password);
@@ -70,7 +71,7 @@ namespace BussinessLogicLater.Service
                 return Result<bool>.Fail(StatusCodes.Status400BadRequest, errors.ToArray());
             }
 
-            var addtoRoleResult = await _userManager.AddToRoleAsync(user, Roles.Member);
+            var addtoRoleResult = await _userManager.AddToRoleAsync(user, DefaultRoles.Member);
 
             if (!addtoRoleResult.Succeeded)
             {
@@ -91,14 +92,23 @@ namespace BussinessLogicLater.Service
             if (user is null)
                 return Result<AuthResult>.Fail(StatusCodes.Status400BadRequest, new[] { "Invalid email or password" });
 
+            if (await _userManager.IsLockedOutAsync(user))
+                return Result<AuthResult>.Fail(StatusCodes.Status400BadRequest, new[] { "Account locked due to multiple failed login attempts. Try again later." });
+
             var isValidCredentials = await _userManager.CheckPasswordAsync(user, loginCredentials.Password);
 
             if (!isValidCredentials)
+            {
+                await _userManager.AccessFailedAsync(user); // Increase failed attempts
                 return Result<AuthResult>.Fail(StatusCodes.Status400BadRequest, new[] { "Invalid email or password" });
+            }
 
             if (!user.EmailConfirmed)
                 return Result<AuthResult>
                     .Fail(StatusCodes.Status403Forbidden, new[] { "Email not confirmed. Please confirm your email in order to signin" });
+
+            // If login successful, reset the failed attempts
+            await _userManager.ResetAccessFailedCountAsync(user);
 
             var jwtToken = await GenerateJWTtoken(user);
             var refreshToken = GenerateRefreshToken(user.Id);

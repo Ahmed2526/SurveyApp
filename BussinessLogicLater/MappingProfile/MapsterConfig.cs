@@ -20,6 +20,11 @@ namespace BussinessLogicLater.MappingProfile
 
             config.NewConfig<ApplicationRole, RoleResponse>()
                .Map(dest => dest.RoleId, src => src.Id);
+
+            config.NewConfig<ApplicationUser, UserResponse>()
+              .Map(dest => dest.UserId, src => src.Id)
+              .Map(dest => dest.Phone, src => src.PhoneNumber);
+
         }
     }
 }

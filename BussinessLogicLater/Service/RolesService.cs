@@ -70,7 +70,7 @@ namespace BussinessLogicLater.Service
                 return Result<RoleResponse>.Fail(StatusCodes.Status409Conflict, new[] { "Role already exist" });
 
             //validate the submitted permissions
-            List<string> validPermissions = ApplicationClaims.All().ToList();
+            List<string> validPermissions = Permissions.All().ToList();
             List<string> submittedPermissions = request.Permissions;
 
             var invalidPermissions = submittedPermissions
@@ -103,7 +103,7 @@ namespace BussinessLogicLater.Service
             //Add Permissions
             foreach (var permission in submittedPermissions)
             {
-                var claimResult = await _roleManager.AddClaimAsync(role, new Claim(ApplicationClaims.Type, permission));
+                var claimResult = await _roleManager.AddClaimAsync(role, new Claim(Permissions.Type, permission));
                 if (!claimResult.Succeeded)
                 {
                     var claimErrors = claimResult.Errors.Select(e => e.Description).ToArray();
@@ -133,7 +133,7 @@ namespace BussinessLogicLater.Service
 
 
             // Validate submitted permissions
-            var validPermissions = ApplicationClaims.All().ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var validPermissions = Permissions.All().ToHashSet(StringComparer.OrdinalIgnoreCase);
             var submittedPermissions = request.Permissions ?? new List<string>();
 
             var invalidPermissions = submittedPermissions
@@ -168,7 +168,7 @@ namespace BussinessLogicLater.Service
             // Add the new set of claims
             foreach (var permission in submittedPermissions)
             {
-                var addClaimResult = await _roleManager.AddClaimAsync(role, new Claim(ApplicationClaims.Type, permission));
+                var addClaimResult = await _roleManager.AddClaimAsync(role, new Claim(Permissions.Type, permission));
                 if (!addClaimResult.Succeeded)
                 {
                     var claimErrors = addClaimResult.Errors.Select(e => e.Description).ToArray();

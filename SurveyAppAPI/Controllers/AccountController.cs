@@ -8,20 +8,20 @@ namespace SurveyAppAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class UserController : ControllerBase
+    public class AccountController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IAccountService _accountService;
 
-        public UserController(IUserService userService)
+        public AccountController(IAccountService accountService)
         {
-            _userService = userService;
+            _accountService = accountService;
         }
 
         [HttpGet]
         [Route("")]
         public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
-            var result = await _userService.GetUserProfile(cancellationToken);
+            var result = await _accountService.GetUserProfile(cancellationToken);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);
@@ -33,7 +33,7 @@ namespace SurveyAppAPI.Controllers
         [Route("")]
         public async Task<IActionResult> UpdateProfile([FromBody] UserProfileRequest request, CancellationToken cancellationToken)
         {
-            var result = await _userService.UpdateUserProfile(request, cancellationToken);
+            var result = await _accountService.UpdateUserProfile(request, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

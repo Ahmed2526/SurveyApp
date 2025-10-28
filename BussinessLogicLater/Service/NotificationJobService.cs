@@ -28,6 +28,7 @@ namespace BussinessLogicLater.Service
         //fix permission type value bug
         //handle statistics End Points
         //cors policy
+        //Get users and their roles using joins 
         public async Task<bool> SendPollsDailyUpdateAsync()
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);

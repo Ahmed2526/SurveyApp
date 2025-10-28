@@ -5,7 +5,11 @@ namespace BussinessLogicLater.IService
 {
     public interface IUserService
     {
-        Task<Result<UserProfileResponse>> GetUserProfile(CancellationToken cancellationToken);
-        Task<Result<bool>> UpdateUserProfile(UserProfileRequest request, CancellationToken cancellationToken);
+        Task<Result<IEnumerable<UserResponse>>> GetAllAsync(CancellationToken cancellationToken);
+        Task<Result<UserResponse>> GetByIdAsync(string UserId, CancellationToken cancellationToken);
+        Task<Result<bool>> CreateAsync(UserRequest request, CancellationToken cancellationToken);
+        Task<Result<bool>> ToggleLockoutAsync(string UserId, CancellationToken cancellationToken);
+        Task<Result<bool>> EditUserRolesAsync(string UserId, List<string> Roles, CancellationToken cancellationToken);
+
     }
 }
